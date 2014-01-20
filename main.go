@@ -7,12 +7,19 @@ import (
   "time"
   "runtime"
   "github.com/garyburd/redigo/redis"
+  "fmt"
 )
 
+
+type Session struct {
+  payload string
+  lock    sync.RWMutex
+}
+
 type MainHandler struct {
-  payload     *string
-  payloadLock *sync.RWMutex
-  rconn       *redis.Conn
+  /* Make a map of payloads and locks for each session being served */
+  sessions     map[string]*Session
+  rconn        *redis.Conn
 }
 
 func (mh MainHandler) ServeHTTP (w http.ResponseWriter, r *http.Request) {
@@ -24,42 +31,70 @@ func (mh MainHandler) ServeHTTP (w http.ResponseWriter, r *http.Request) {
 }
 
 func (mh MainHandler) HandleSessionRequest (w http.ResponseWriter, r *http.Request) {
-  if r.Method == "GET"{
-    mh.payloadLock.RLock()
-    w.Write([]byte(*mh.payload))
-    mh.payloadLock.RUnlock()
+  path := strings.Split(r.URL.Path, "/")
+  if len (path) != 3 {
+    return
+  }
+  sessionName := path[2]
+  if r.Method == "GET" {
+    session := mh.sessions[sessionName]
+    fmt.Println (session.payload)
+
+    session.lock.RLock()
+    w.Write([]byte(session.payload))
+    session.lock.RUnlock()
+  }
+  if r.Method == "POST" {
+    mh.AddSession(sessionName)
   }
 }
 
-func main () {
-  runtime.GOMAXPROCS(runtime.NumCPU())
-  mh := MainHandler{payload: new(string), payloadLock: new(sync.RWMutex)}
-
-  c, err := redis.Dial("tcp", ":6379")
-  if err != nil {
-    return;
+func (mh MainHandler) AddSession (session string) {
+  sessions := mh.sessions
+  _, ok := sessions[session]
+  if ok {
+    return
   }
 
-  go func (mh MainHandler, conn *redis.Conn, session string) {
+  sessions[session] = new(Session)
+}
+
+func (mh MainHandler) StartSessions () {
+  go func (mh MainHandler) {
     dur, err := time.ParseDuration("1s")
     if err != nil {
       return;
     }
 
     for {
-      rep, err := (*conn).Do ("GET", "sessions:" + session + ":state")
-      payload , err := redis.String(rep, err)
-      if err != nil {
-        continue;
+      for sessionName, session := range mh.sessions {
+        rep, err := (*mh.rconn).Do ("GET", "sessions:" + sessionName + ":state")
+        payload , err := redis.String(rep, err)
+
+        if err != nil {
+          delete (mh.sessions, sessionName)
+        }
+
+        session.lock.Lock()
+        session.payload = payload
+        session.lock.Unlock()
       }
-
-      mh.payloadLock.Lock()
-      *mh.payload = payload
-      mh.payloadLock.Unlock()
-
       time.Sleep(dur)
     }
-  } (mh, &c, "live")
+  } (mh)
+}
+
+func main () {
+  runtime.GOMAXPROCS(runtime.NumCPU())
+
+  c, err := redis.Dial("tcp", ":6379")
+  if err != nil {
+    return;
+  }
+
+  mh := MainHandler{make(map[string]*Session), &c}
+  mh.AddSession("live")
+  mh.StartSessions()
 
   http.ListenAndServe(":8080", mh)
 }

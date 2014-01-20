@@ -6,11 +6,13 @@ import (
   "sync"
   "time"
   "runtime"
+  "github.com/garyburd/redigo/redis"
 )
 
 type MainHandler struct {
   payload     *string
   payloadLock *sync.RWMutex
+  rconn       *redis.Conn
 }
 
 func (mh MainHandler) ServeHTTP (w http.ResponseWriter, r *http.Request) {
@@ -33,19 +35,31 @@ func main () {
   runtime.GOMAXPROCS(runtime.NumCPU())
   mh := MainHandler{payload: new(string), payloadLock: new(sync.RWMutex)}
 
-  go func (mh MainHandler) {
+  c, err := redis.Dial("tcp", ":6379")
+  if err != nil {
+    return;
+  }
+
+  go func (mh MainHandler, conn *redis.Conn, session string) {
     dur, err := time.ParseDuration("1s")
     if err != nil {
       return;
     }
 
     for {
-      time.Sleep(dur)
+      rep, err := (*conn).Do ("GET", "sessions:" + session + ":state")
+      payload , err := redis.String(rep, err)
+      if err != nil {
+        continue;
+      }
+
       mh.payloadLock.Lock()
-      *mh.payload = "{1: [1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}"
+      *mh.payload = payload
       mh.payloadLock.Unlock()
+
+      time.Sleep(dur)
     }
-  } (mh)
+  } (mh, &c, "live")
 
   http.ListenAndServe(":8080", mh)
 }

@@ -6,8 +6,6 @@ import (
   "runtime"
 )
 
-
-
 /*-----------------------------------------*/
 
 //This handler implements the web service
@@ -26,19 +24,28 @@ func (mh MainHandler) ServeHTTP (w http.ResponseWriter, r *http.Request) {
 }
 
 func (mh MainHandler) HandleSessionRequest (w http.ResponseWriter, r *http.Request) {
+  //TODO: Write some payload in the response
+  //TODO: Improve headers a bit
   path := strings.Split(r.URL.Path, "/")
   if len (path) != 3 {
+    w.WriteHeader(http.StatusNotFound)
     return
   }
+
   session := path[2]
+
   if r.Method == "GET" {
     payload, err := mh.cache.GetPayload(session)
     if err != nil {
-      //TODO: Return error
+      w.WriteHeader(http.StatusNotFound)
       return
     }
+
     w.Write([]byte(payload))
+    return
   }
+
+  w.WriteHeader(http.StatusNotFound)
 }
 
 func main () {

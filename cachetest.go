@@ -27,7 +27,7 @@ func main () {
           print (payload)
           return
         }
-      } (&cache, p)
+      } (cache, p)
     }
 
     print ("iteration\n")

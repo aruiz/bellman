@@ -15,13 +15,13 @@ type Cache struct {
 }
 
 //TODO: set interval and configuration as argument
-func CreateCache () (Cache, error) {
+func CreateCache () (*Cache, error) {
   // Use Redis connection
   //TODO: Make type of datastore configurable
   rds := RedisDataStore{}
   err := rds.Connect(":6379")
   if err != nil {
-    return Cache{}, err
+    return &Cache{}, err
   }
 
   cache := Cache{&rds,
@@ -33,7 +33,7 @@ func CreateCache () (Cache, error) {
                }
 
   go UpdateCache(&cache)
-  return cache, nil
+  return &cache, nil
 }
 
 func UpdateCache (c *Cache) {

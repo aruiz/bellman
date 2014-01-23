@@ -1,62 +1,23 @@
 package main
 
 import (
-//  "time"
+  "time"
   "sync"
-  "github.com/garyburd/redigo/redis"
 )
-
-
-type DataStore interface {
-  GetStateForSession (session string) (string, error)
-}
-
-
-type RedisDataStore struct {
-  mut         *sync.Mutex
-  conn        *redis.Conn
-}
-
-func (rds *RedisDataStore) Connect (url string) error {
-  c, err := redis.Dial("tcp", url)
-  if err != nil {
-    return err
-  }
-
-  rds.mut = new(sync.Mutex)
-  rds.conn = &c
-
-  print (rds.conn)
-
-  return nil
-}
-
-func (rds RedisDataStore) GetStateForSession (session string) (string, error) {
-  print (rds.conn)
-  if rds.conn == nil {
-    return "", nil
-  }
-
-  rds.mut.Lock()
-  rep, err := (*rds.conn).Do ("GET", "sessions:" + session + ":state")
-  rds.mut.Unlock()
-
-  payload , err := redis.String(rep, err)
-  return payload, err
-}
 
 type Cache struct {
   ds DataStore
   cache map[string]string
-  lock *sync.RWMutex
-
+  lock sync.RWMutex
+  running   bool
+  stop chan bool
+  ret  chan bool
 }
 
+//TODO: set interval and configuration as argument
 func CreateCache () (Cache, error) {
-
-  //go func () {
-  //} ()
-
+  // Use Redis connection
+  //TODO: Make type of datastore configurable
   rds := RedisDataStore{}
   err := rds.Connect(":6379")
   if err != nil {
@@ -65,14 +26,54 @@ func CreateCache () (Cache, error) {
 
   cache := Cache{&rds,
                  make(map[string]string),
-                 new(sync.RWMutex)}
+                 sync.RWMutex{},
+                 true,
+                 make(chan bool, 1),
+                 make(chan bool, 1),
+               }
 
-  print (rds.conn)
+  go UpdateCache(&cache)
   return cache, nil
 }
 
+func UpdateCache (c *Cache) {
+  dur, _ := time.ParseDuration("1s")
+  for {
+    timeout := time.After(dur)
+    c.lock.RLock ()
+    for key := range c.cache {
+      c.lock.RUnlock ()
+
+      payload, err := c.ds.GetStateForSession(key)
+      if err != nil {
+        //FIXME: Log error
+        return
+      }
+
+      c.lock.Lock()
+      c.cache[key] = payload
+      c.lock.Unlock()
+
+      c.lock.RLock ()
+    }
+    c.lock.RUnlock ()
+
+    select {
+    case foo := <-c.stop:
+      c.ret <- foo
+      return
+    default:
+    }
+
+    //Wait for a second to pass
+    <-timeout
+  }
+}
 
 func (self *Cache) Close () {
+  self.stop <- true
+  self.running = <-self.ret
+  self.ds.Close()
 }
 
 func (self *Cache) SetPayload (key string, payload string) error {

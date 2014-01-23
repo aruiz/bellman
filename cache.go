@@ -17,19 +17,22 @@ type RedisDataStore struct {
   conn        *redis.Conn
 }
 
-func (rds RedisDataStore) Connect (url string) error {
+func (rds *RedisDataStore) Connect (url string) error {
   c, err := redis.Dial("tcp", url)
   if err != nil {
     return err
   }
 
   rds.mut = new(sync.Mutex)
-
   rds.conn = &c
+
+  print (rds.conn)
+
   return nil
 }
 
 func (rds RedisDataStore) GetStateForSession (session string) (string, error) {
+  print (rds.conn)
   if rds.conn == nil {
     return "", nil
   }
@@ -46,23 +49,30 @@ type Cache struct {
   ds DataStore
   cache map[string]string
   lock *sync.RWMutex
+
 }
 
 func CreateCache () (Cache, error) {
-  conn, err := redis.Dial("tcp", ":6379")
+
+  //go func () {
+  //} ()
+
+  rds := RedisDataStore{}
+  err := rds.Connect(":6379")
   if err != nil {
     return Cache{}, err
   }
 
-  ds := new(RedisDataStore)
-  ds.conn = &conn
+  cache := Cache{&rds,
+                 make(map[string]string),
+                 new(sync.RWMutex)}
 
-  lock := new(sync.RWMutex)
-
-  //go func ()
-
-  cache := Cache{ds, make(map[string]string), lock}
+  print (rds.conn)
   return cache, nil
+}
+
+
+func (self *Cache) Close () {
 }
 
 func (self *Cache) SetPayload (key string, payload string) error {
@@ -70,9 +80,11 @@ func (self *Cache) SetPayload (key string, payload string) error {
 }
 
 func (self *Cache) GetPayload (key string) (string, error) {
+
   self.lock.RLock()
   value, ok := self.cache[key]
   self.lock.RUnlock()
+
   if !ok {
     v, err := self.ds.GetStateForSession(key)
     if err != nil {

@@ -46,7 +46,7 @@ func UpdateCache (c *Cache) {
 
       payload, err := c.ds.GetStateForSession(key)
       if err != nil {
-        //FIXME: Log error
+        print (err.Error ())
         return
       }
 
@@ -76,11 +76,7 @@ func (self *Cache) Close () {
   self.ds.Close()
 }
 
-func (self *Cache) SetPayload (key string, payload string) error {
-  return nil
-}
-
-func (self *Cache) GetPayload (key string) (string, error) {
+func (self *Cache) GetStateForSession (key string) (string, error) {
 
   self.lock.RLock()
   value, ok := self.cache[key]

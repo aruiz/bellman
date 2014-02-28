@@ -72,8 +72,14 @@ func main () {
   }
   err = fcgi.Serve (unix, mh)
   */
-  err := http.ListenAndServe(":8080", mh)
-  //err = http.ListenAndServeTLS(":8080", "vhost1.crt", "vhost1.key", mh)
+
+  var err error
+  url := cfg.host + ":" + cfg.port
+  if cfg.ssl != "true" {
+    err = http.ListenAndServe(url, mh)
+  } else {
+    err = http.ListenAndServeTLS(url, cfg.ssl_cert, cfg.ssl_key, mh)
+  }
   if err != nil {
     print(err.Error())
   }

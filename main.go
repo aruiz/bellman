@@ -7,7 +7,6 @@ import (
   "strings"
   "runtime"
   "strconv"
-  "flag"
 )
 
 /*-----------------------------------------*/
@@ -52,18 +51,11 @@ func (mh MainHandler) HandleSessionRequest (w http.ResponseWriter, r *http.Reque
 }
 
 func main () {
-  flag.String("config", "", "path to configuration file")
-  flag.Parse()
-  configFile := flag.Lookup("config").Value.String()
-
-  if configFile == "" {
-    //TODO: Find file in $HOME/.local/etc and /etc
-  }
-
-  //TODO: Load JSON file
-
   runtime.GOMAXPROCS(runtime.NumCPU() * 2)
-  cache, cerr := CreateCache()
+
+  cfg := NewConfig()
+
+  cache, cerr := CreateCache(cfg)
   if cerr != nil {
     print (cerr.Error())
     return
@@ -80,7 +72,6 @@ func main () {
   }
   err = fcgi.Serve (unix, mh)
   */
-
   err := http.ListenAndServe(":8080", mh)
   //err = http.ListenAndServeTLS(":8080", "vhost1.crt", "vhost1.key", mh)
   if err != nil {

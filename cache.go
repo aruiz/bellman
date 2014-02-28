@@ -3,6 +3,7 @@ package main
 import (
   "time"
   "sync"
+  "errors"
 )
 
 type Cache struct {
@@ -15,25 +16,25 @@ type Cache struct {
 }
 
 //TODO: set interval and configuration as argument
-func CreateCache () (*Cache, error) {
-  // Use Redis connection
-  //TODO: Make type of datastore configurable
-  rds := RedisDataStore{}
-  err := rds.Connect(":6379")
-  if err != nil {
-    return &Cache{}, err
+func CreateCache (cfg *Config) (*Cache, error) {
+  if cfg.cache_backend == "redis" {
+    rds := RedisDataStore{}
+    err := rds.Connect(cfg.redis_host + ":" + cfg.redis_port)
+    if err != nil {
+      return nil, err
+    }
+    cache := Cache{&rds,
+                   make(map[string]string),
+                   sync.RWMutex{},
+                   true,
+                   make(chan bool, 1),
+                   make(chan bool, 1),
+                 }
+
+    go UpdateCache(&cache)
+    return &cache, nil
   }
-
-  cache := Cache{&rds,
-                 make(map[string]string),
-                 sync.RWMutex{},
-                 true,
-                 make(chan bool, 1),
-                 make(chan bool, 1),
-               }
-
-  go UpdateCache(&cache)
-  return &cache, nil
+  return nil, errors.New("CreateCache: No valid cache_backend option was provided")
 }
 
 func UpdateCache (c *Cache) {

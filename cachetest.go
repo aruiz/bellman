@@ -9,7 +9,7 @@ func main () {
     return
   }
 
-  p, err :=  cache.GetStateForSession("live")
+  p, err :=  cache.GetObject("sessions:live:state")
   if err != nil {
     print (err.Error())
     return
@@ -21,7 +21,7 @@ func main () {
 
     for i := 0; i < 30000; i++ {
       go func (c *Cache, p string) {
-        payload, _ := cache.GetStateForSession("live")
+        payload, _ := cache.GetObject("sessions:live:state")
         if payload != p {
           print ("corruption")
           print (payload)

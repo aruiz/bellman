@@ -44,7 +44,7 @@ func UpdateCache (c *Cache) {
     for key := range c.cache {
       c.lock.RUnlock ()
 
-      payload, err := c.ds.GetStateForSession(key)
+      payload, err := c.ds.GetObject(key)
       if err != nil {
         print (err.Error ())
         return
@@ -76,14 +76,14 @@ func (self *Cache) Close () {
   self.ds.Close()
 }
 
-func (self *Cache) GetStateForSession (key string) (string, error) {
+func (self *Cache) GetObject (key string) (string, error) {
 
   self.lock.RLock()
   value, ok := self.cache[key]
   self.lock.RUnlock()
 
   if !ok {
-    v, err := self.ds.GetStateForSession(key)
+    v, err := self.ds.GetObject(key)
     if err != nil {
       return "", err
     }

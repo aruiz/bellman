@@ -22,13 +22,13 @@ func (rds *RedisDataStore) Connect (url string) error {
   return nil
 }
 
-func (rds RedisDataStore) GetStateForSession (session string) (string, error) {
+func (rds RedisDataStore) GetObject (session string) (string, error) {
   if rds.conn == nil {
     return "", nil
   }
 
   rds.mut.Lock()
-  rep, err := (*rds.conn).Do ("GET", "sessions:" + session + ":state")
+  rep, err := (*rds.conn).Do ("GET", session)
   rds.mut.Unlock()
 
   payload , err := redis.String(rep, err)

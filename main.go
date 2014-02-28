@@ -20,7 +20,7 @@ type MainHandler struct {
 func (mh MainHandler) ServeHTTP (w http.ResponseWriter, r *http.Request) {
   path := r.URL.Path
   switch {
-    case strings.HasPrefix(path, "/session"):
+    case strings.HasPrefix(path, "/sessions"):
         mh.HandleSessionRequest (w, r)
     default:
       w.WriteHeader(http.StatusNotFound)
@@ -37,7 +37,7 @@ func (mh MainHandler) HandleSessionRequest (w http.ResponseWriter, r *http.Reque
   session := path[2]
 
   if r.Method == "GET" {
-    payload, err := mh.cache.GetStateForSession(session)
+    payload, err := mh.cache.GetObject("sessions:" + session + ":state")
     if err != nil {
       w.Header().Set("Content-Length", strconv.Itoa(len(payload)))
       w.WriteHeader(http.StatusNotFound)

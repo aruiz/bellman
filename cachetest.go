@@ -3,7 +3,8 @@ package main
 import "time"
 
 func main () {
-  cache, err := CreateCache()
+  cfg := NewConfig()
+  cache, err := CreateCache(cfg)
   if err != nil {
     print (err.Error())
     return

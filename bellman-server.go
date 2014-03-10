@@ -5,20 +5,21 @@ import (
 //  "net/http/fcgi"
   "net/http"
   "runtime"
+  "github.com/aruiz/bellman/bellman"
 )
 
 func main () {
   runtime.GOMAXPROCS(runtime.NumCPU() * 2)
 
-  cfg := NewConfig()
+  cfg := bellman.NewConfig()
 
-  cache, cerr := CreateCache(cfg)
+  cache, cerr := bellman.CreateCache(cfg)
   if cerr != nil {
     print (cerr.Error())
     return
   }
 
-  mh := MainHandler{cache}
+  mh := bellman.MainHandler{cache}
 
   /*
   // FCFI Server

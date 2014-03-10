@@ -1,29 +1,27 @@
-Torque Server
--------------
-
-torque-server is a Go library to create an HTTP service to broadcast data backed
+Bellman
+-------
+Bellman is a Go library to create an HTTP service to broadcast data backed
 in a key/value datastore under a fixed time update policy. Think of it as a
 front-line cache for rapidly changing data.
 
 
 In this diagram
 
-                                                              +-----------------
-                                                              | HTTP(S) clients
-                                                              |
-             Update data in fixed intervals                   |
-+-----------------+                +------------------+<------+
-| Key/Value Store |   (1s/1m/1h)   |  torque service  |<------+
-|                 +--------------->|                  |<------+
-|                 |<---------------+                  |<------+
-+-----------------+                |                  |<------+
-                                   +------------------+<------+
-                                                              |
-                                                              |
-                                                              +-----------------
+                                                             +-----------------
+                                                             | HTTP(S) clients
+                                                             |
+             Update data in fixed intervals                  |
++----------------+                +------------------+<------+
+|  object Store  |   (1s/1m/1h)   | bellman service  |<------+
+|                +--------------->|                  |<------+
+|                |<---------------+                  |<------+
++----------------+                |                  |<------+
+                                  +------------------+<------+
+                                                             |
+                                                             |
+                                                             +-----------------
 
 TODO
 ----
-- Split files to create a library that you can "go get"
 - Write tests for the provided funcionality
 - Add other key/value store providers

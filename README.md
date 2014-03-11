@@ -1,4 +1,4 @@
-# Bellman
+# Bellman #
 
 Bellman is a Go library to create an HTTP service to broadcast data backed
 in a key/value datastore under a fixed time update policy. Think of it as a
@@ -7,6 +7,7 @@ front-line cache for rapidly changing data.
 
 In this diagram I describe the current architecture of bellman:
 
+```
                                                              +-----------------
                                                              | HTTP(S) clients
                                                              |
@@ -20,6 +21,7 @@ In this diagram I describe the current architecture of bellman:
                                                              |
                                                              |
                                                              +-----------------
+```
 
 Currently it takes the URL path and turns it into a colon separated key,
 this is an example for a bellamn server listening to http://localhost:8080
@@ -39,13 +41,13 @@ to a Redis server. Other cache backends are easily added provided you
 implement provided it implements the DataStore interface, the Config struct
 is extended and the Cache object gets support for it.
 
-## INSTALL
+## INSTALL ##
 go get github.com/aruiz/bellman
 
-## SERVER USAGE
+## SERVER USAGE ##
 $GOCODE/bin/bellman -help
 
-## TODO
+## TODO ##
 - Make the separator for the key more generic
 - Write tests for the provided funcionality
 - Add other key/value store providers

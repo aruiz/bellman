@@ -35,9 +35,9 @@ type Cache struct {
 
 //TODO: set interval and configuration as argument
 func CreateCache (cfg *Config) (*Cache, error) {
-  if cfg.cache_backend == "redis" {
+  if cfg.CacheBackend == "redis" {
     rds := RedisDataStore{}
-    err := rds.Connect(cfg.redis_host + ":" + cfg.redis_port)
+    err := rds.Connect(cfg.RedisHost + ":" + cfg.RedisPort)
     if err != nil {
       return nil, err
     }

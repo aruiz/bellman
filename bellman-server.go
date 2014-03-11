@@ -19,7 +19,7 @@ func main () {
     return
   }
 
-  mh := bellman.MainHandler{cache}
+  mh := bellman.NewHttpHandler(cache)
 
   /*
   // FCFI Server
@@ -32,11 +32,13 @@ func main () {
   */
 
   var err error
-  url := cfg.host + ":" + cfg.port
-  if cfg.ssl != "true" {
+  url := cfg.Host + ":" + cfg.Port
+  if cfg.Ssl != "true" {
+    print ("starting bellman at address http://" +url)
     err = http.ListenAndServe(url, mh)
   } else {
-    err = http.ListenAndServeTLS(url, cfg.ssl_cert, cfg.ssl_key, mh)
+    print ("starting bellman at address https://" +url)
+    err = http.ListenAndServeTLS(url, cfg.SslCert, cfg.SslKey, mh)
   }
   if err != nil {
     print(err.Error())

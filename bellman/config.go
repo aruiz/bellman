@@ -21,15 +21,15 @@ package bellman
 import "flag"
 
 type Config struct {
-  host string
-  port string
-  ssl  string
-  ssl_cert string
-  ssl_key  string
-  cache_backend string
-  cache_interval string
-  redis_host string
-  redis_port string
+  Host string
+  Port string
+  Ssl  string
+  SslCert string
+  SslKey  string
+  CacheBackend string
+  CacheInterval string
+  RedisHost string
+  RedisPort string
 }
 
 func NewConfig () (*Config) {
@@ -46,15 +46,15 @@ func NewConfig () (*Config) {
   flag.Parse()
 
   cfg := new(Config)
-  cfg.host = flag.Lookup("host").Value.String()
-  cfg.port = flag.Lookup("port").Value.String()
-  cfg.ssl      = flag.Lookup("ssl").Value.String()
-  cfg.ssl_cert = flag.Lookup("ssl_cert").Value.String()
-  cfg.ssl_key  = flag.Lookup("ssl_key").Value.String()
-  cfg.cache_backend  = flag.Lookup("cache_backend").Value.String()
-  cfg.cache_interval = flag.Lookup("cache_interval").Value.String()
-  cfg.redis_host = flag.Lookup("redis_host").Value.String()
-  cfg.redis_port = flag.Lookup("redis_port").Value.String()
+  cfg.Host = flag.Lookup("host").Value.String()
+  cfg.Port = flag.Lookup("port").Value.String()
+  cfg.Ssl      = flag.Lookup("ssl").Value.String()
+  cfg.SslCert = flag.Lookup("ssl_cert").Value.String()
+  cfg.SslKey  = flag.Lookup("ssl_key").Value.String()
+  cfg.CacheBackend  = flag.Lookup("cache_backend").Value.String()
+  cfg.CacheInterval = flag.Lookup("cache_interval").Value.String()
+  cfg.RedisHost = flag.Lookup("redis_host").Value.String()
+  cfg.RedisPort = flag.Lookup("redis_port").Value.String()
 
   return cfg
 }

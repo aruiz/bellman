@@ -25,11 +25,17 @@ import  (
 )
 
 //This handler implements the web service
-type MainHandler struct {
+type HttpHandler struct {
   cache *Cache
 }
 
-func (mh MainHandler) ServeHTTP (w http.ResponseWriter, r *http.Request) {
+func NewHttpHandler (cache *Cache) (*HttpHandler){
+  hh := new(HttpHandler)
+  hh.cache = cache
+  return hh
+}
+
+func (mh HttpHandler) ServeHTTP (w http.ResponseWriter, r *http.Request) {
   path := strings.Split(r.URL.Path, "/")
   if len (path) < 2 {
     w.WriteHeader(http.StatusNotFound)
@@ -37,7 +43,8 @@ func (mh MainHandler) ServeHTTP (w http.ResponseWriter, r *http.Request) {
   }
 
   //TODO: Make separator configurable? Through a handler?
-  key := strings.Join(path[1:len(path)-1], ":")
+  key := strings.Join(path[1:len(path)], ":")
+  print(key+"\n")
 
   if r.Method != "GET" {
     w.WriteHeader(http.StatusNotFound)
